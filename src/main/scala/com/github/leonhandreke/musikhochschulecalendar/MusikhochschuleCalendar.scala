@@ -8,21 +8,29 @@ import biweekly.ICalendar
 import biweekly.component.VEvent
 import biweekly.util.Duration
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Element
+import org.jsoup.nodes.{Document, Element}
 
 import scala.collection.JavaConversions
 import scala.util.matching.Regex
 
 object MusikhochschuleCalendar {
 
-  val DATE_REGEX = new Regex("""(\d+\.\d+\.\d+)\s+(\d+:\d+)""")
+  final val DATE_REGEX = new Regex("""(\d+\.\d+\.\d+)\s+(\d+:\d+)""")
+  final val MUSIKHOCHSCHULE_URL = "http://website.musikhochschule-muenchen.de/de/index.php?option=com_content&task=view&id=565&Itemid=602&d1=01&m1=01&y1=2016&d2=31&m2=12&y2=2017"
 
   def main(args: Array[String]): Unit = {
 
     val document = Jsoup
-      .connect("http://website.musikhochschule-muenchen.de/de/index.php?option=com_content&task=view&id=565&Itemid=602&d1=01&m1=01&y1=2016&d2=31&m2=12&y2=2017")
+      .connect(MUSIKHOCHSCHULE_URL)
       .timeout(0)
       .get();
+
+    val calendar = getCalendarFromDocument(document)
+
+    print(calendar.write)
+  }
+
+  def getCalendarFromDocument(document: Document): ICalendar = {
     val eventsTable = document.body()
       .getElementById("VER_2013_DISPLAYSEARCHRESULTS")
       .getElementsByTag("table")
@@ -42,10 +50,11 @@ object MusikhochschuleCalendar {
           event.startDate.toInstant(ZoneId.of("Europe/Berlin").getRules.getOffset(event.startDate))),
         /* hasTime */ true)
       c.setDuration(Duration.builder().hours(2).build())
+      c setLocation event.location
       calendar.addEvent(c)
     })
 
-    println(calendar.write)
+    return calendar
   }
 
   def tableRowToEvent(e: Element): Event = {
