@@ -41,6 +41,8 @@ object MusikhochschuleCalendar {
     val events = eventRows.map(tableRowToEvent)
 
     val calendar = new ICalendar()
+    calendar.setName("Hochschule für Musik und Theater München")
+
     events foreach ((event : Event) => {
       val c = new VEvent()
       c.setSummary(event.title)
